@@ -19,7 +19,9 @@ extra = {
         'aiohttp==3.7',
         'pandas==1.3.4',
         'wandb==0.12.9',
+        'setproctitle==1.1.10',
         'openskill==0.2.0-alpha.0',
+        'service-identity==21.1.0',
         'torch',
         ],
     }
@@ -37,8 +39,6 @@ setup(
     install_requires=[
         'pytest-benchmark==3.4.1',
         'fire==0.4.0',
-        'setproctitle==1.1.10',
-        'service-identity==21.1.0',
         'autobahn==19.3.3',
         'Twisted==19.2.0',
         'vec-noise==1.1.4',
