@@ -181,7 +181,7 @@ class Env(ParallelEnv):
                     shape=(1,), dtype=DataType.DISCRETE)
          if name == 'Tile':
             observation['Tile']['N'] = gym.spaces.Box(
-                    low=0, high=self.config.WINDOW**2,
+                    low=0, high=self.config.PLAYER_VISION_DIAMETER,
                     shape=(1,), dtype=DataType.DISCRETE)
          elif name == 'Item':
             observation['Item']['N']   = gym.spaces.Box(low=0, high=self.config.ITEM_N_OBS, shape=(1,), dtype=DataType.DISCRETE)
@@ -621,14 +621,10 @@ class Env(ParallelEnv):
       for entID, ent in self.realm.players.entities.items():
          self.log_player(ent)
 
-<<<<<<< HEAD
       if self.config.SAVE_REPLAY:
          self.replay.save()
 
-      return self.quill.packet
-=======
       return self.realm.quill.packet
->>>>>>> v1.6-cleanrl
 
    ############################################################################
    ### Override hooks

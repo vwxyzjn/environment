@@ -144,9 +144,6 @@ class Config(Template):
 
    ############################################################################
    ### Population Parameters                                                   
-   AGENT_LOADER            = SequentialLoader
-   '''Agent loader class specifying spawn sampling'''
-
    LOG_EVENTS                   = True
    '''Whether to log events (semi-expensive)'''
 

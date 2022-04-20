@@ -263,7 +263,7 @@ class Dataframe:
 
       ent.targets          = ents
       stim['Tile']         = self.data['Tile'].get(ent)
-      stim['Tile']['N']    = np.array([int(self.config.WINDOW**2)], dtype=np.int32)
+      stim['Tile']['N']    = np.array([self.config.PLAYER_VISION_DIAMETER], dtype=np.int32)
 
       #Current must have the same pad
       if self.config.ITEM_SYSTEM_ENABLED:
