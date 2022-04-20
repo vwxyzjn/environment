@@ -8,7 +8,6 @@ import logging
 import numpy as np
 import json, pickle
 import time
-import ray
 
 from nmmo.lib import utils
 

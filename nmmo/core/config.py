@@ -118,6 +118,35 @@ class Config(Template):
    RENDER                       = False
    '''Flag used by render mode'''
 
+   SAVE_REPLAY            = False
+   '''Flag used to save replays'''
+
+   def game_system_enabled(self, name) -> bool:
+      return hasattr(self, name)
+
+   def population_mapping_fn(self, idx) -> int:
+      return idx % self.NPOP
+
+   ############################################################################
+   ### Emulation Parameters
+ 
+   EMULATE_FLAT_OBS       = False
+   '''Emulate a flat observation space'''
+
+   EMULATE_FLAT_ATN       = False
+   '''Emulate a flat action space'''
+
+   EMULATE_CONST_NENT     = False
+   '''Emulate a constant number of agents'''
+
+   EMULATE_CONST_HORIZON  = False
+   '''Emulate a constant HORIZON simulations steps'''
+
+   ############################################################################
+   ### Population Parameters                                                   
+   AGENT_LOADER            = SequentialLoader
+   '''Agent loader class specifying spawn sampling'''
+
    LOG_EVENTS                   = True
    '''Whether to log events (semi-expensive)'''
 
@@ -129,7 +158,6 @@ class Config(Template):
 
    TASKS                        = []
    '''Tasks for which to compute rewards'''
-
 
    ############################################################################
    ### Player Parameters                                                   
@@ -156,6 +184,11 @@ class Config(Template):
       return 2*self.PLAYER_VISION_RADIUS + 1
 
 
+   ############################################################################
+   ### Agent Parameters                                                   
+   BASE_HEALTH                = 10
+   '''Initial Constitution level and agent health'''
+
    PLAYER_LOADER                = spawn.SequentialLoader
    '''Agent loader class specifying spawn sampling'''
 
@@ -181,6 +214,20 @@ class Config(Template):
    MAP_N                        = 1
    '''Number of maps to generate'''
 
+   def SPAWN_CONCURRENT(self, shuffle=True):
+      left   = self.TERRAIN_BORDER
+      right  = self.TERRAIN_CENTER + self.TERRAIN_BORDER
+      rrange = np.arange(left+2, right, 4).tolist()
+
+      ret = s1 + s2 + s3 + s4
+      if shuffle:
+        assert not len(ret) % self.NPOP
+        ret = np.array_split(ret, self.NPOP)
+        np.random.shuffle(ret)
+        ret = np.concatenate(ret, axis=0).tolist()
+      n = int(self.NENT * len(self.AGENTS))
+      return ret[:n]
+ 
    MAP_N_TILE                   = len(material.All.materials)
    '''Number of distinct terrain tile types'''
 
@@ -199,6 +246,9 @@ class Config(Template):
    def MAP_SIZE(self):
       return int(self.MAP_CENTER + 2*self.MAP_BORDER)
 
+
+   ############################################################################
+   ### Terrain Generation Parameters
    MAP_GENERATOR                = None
    '''Specifies a user map generator. Uses default generator if unspecified.'''
 
@@ -525,6 +575,11 @@ class Small(Config):
    PROGRESSION_SPAWN_UNIFORMS   = 16
 
 
+   NPC_LEVEL_MAX                = 10
+   NPC_LEVEL_SPREAD             = 1
+   
+   HORIZON                      = 128
+
 
 class Medium(Config):
    '''A medium config suitable for most academic-scale research'''
@@ -546,6 +601,9 @@ class Medium(Config):
 
 
 
+   HORIZON                 = 1024
+
+
 class Large(Config):
    '''A large config suitable for large-scale research or fast models'''
 
@@ -564,5 +622,7 @@ class Large(Config):
    PROGRESSION_SPAWN_CLUSTERS   = 1024
    PROGRESSION_SPAWN_UNIFORMS   = 4096
 
+
+   HORIZON                 = 8192
 
 class Default(Medium, AllGameSystems): pass
