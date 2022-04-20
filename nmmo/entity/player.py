@@ -30,7 +30,7 @@ class Player(entity.Entity):
       self.poultice_level_consumed = 0
 
       # Submodules
-      self.skills = Skills(self)
+      self.skills = Skills(realm, self)
 
       self.diary  = None
       if tasks := realm.config.TASKS:

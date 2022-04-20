@@ -223,7 +223,7 @@ class Attack(Node):
       targ.attackerID.update(entity.entID)
 
       from nmmo.systems import combat
-      dmg = combat.attack(entity, targ, style.skill)
+      dmg = combat.attack(env, entity, targ, style.skill)
 
       if style.freeze and dmg > 0:
          targ.status.freeze.update(env.config.COMBAT_FREEZE_TIME)

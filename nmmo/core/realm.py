@@ -11,7 +11,7 @@ from nmmo.systems.exchange import Exchange
 from nmmo.systems import combat
 from nmmo.entity.npc import NPC
 from nmmo.entity import Player
-from nmmo.lib import colors, spawn
+from nmmo.lib import colors, spawn, log
 
 def prioritized(entities: Dict, merged: Dict):
    '''Sort actions into merged according to priority'''
@@ -220,6 +220,7 @@ class Realm:
       Args:
          idx: Map index to load
       ''' 
+      self.quill = log.Quill(self.config)
       self.map.reset(self, idx)
       self.players.reset()
       self.npcs.reset()

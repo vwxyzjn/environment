@@ -157,8 +157,6 @@ class Env(ParallelEnv):
       self.actions = {}
       self.dead    = []
 
-      self.quill = log.Quill()
-      
       if idx is None:
          idx = np.random.randint(self.config.MAP_N) + 1
 
@@ -323,8 +321,9 @@ class Env(ParallelEnv):
             rewards[entID], infos[entID] = self.reward(ent)
             dones[entID]   = False
 
+      self.log_env()
       for entID, ent in self.dead.items():
-         self.log(ent)
+         self.log_player(ent)
 
       self.realm.exchange.step()
 
@@ -343,60 +342,70 @@ class Env(ParallelEnv):
 
    ############################################################################
    ### Logging
-   def log(self, ent) -> None:
-      '''Logs agent data upon death
+   def log_env(self) -> None:
+      '''Logs player data upon death
 
-      This function is called automatically when an agent dies. Logs are used
-      to compute summary stats and populate the dashboard. You should not
-      call it manually. Instead, override this method to customize logging.
+      This function is called automatically once per environment step
+      to compute summary stats. You should not call it manually.
+      Instead, override this method to customize logging.
+      '''
+      pass
+
+   def log_player(self, player) -> None:
+      '''Logs player data upon death
+
+      This function is called automatically when an agent dies
+      to compute summary stats. You should not call it manually.
+      Instead, override this method to customize logging.
 
       Args:
-         ent: An agent
+         player: An agent
       '''
 
       config = self.config
-      quill  = self.quill
-      policy = ent.policy
+      quill  = self.realm.quill
+      policy = player.policy
 
       # Basic stats
-      quill.stat(f'{policy}_Lifetime',  ent.history.timeAlive.val)
+      quill.log_player(f'{policy}_Lifetime',  player.history.timeAlive.val)
 
       # Tasks
-      if ent.diary:
-         if ent.agent.scripted:
-            ent.diary.update(self.realm, ent)
+      if player.diary:
+         if player.agent.scripted:
+            player.diary.update(self.realm, player)
 
-         quill.stat(f'{policy}_Tasks_Completed', ent.diary.completed)
-         quill.stat(f'{policy}_Task_Reward', ent.diary.cumulative_reward)
-         for achievement in ent.diary.achievements:
-            quill.stat(achievement.name, float(achievement.completed))
+         quill.log_player(f'{policy}_Tasks_Completed', player.diary.completed)
+         quill.log_player(f'{policy}_Task_Reward',     player.diary.cumulative_reward)
+
+         for achievement in player.diary.achievements:
+            quill.log_player(achievement.name, float(achievement.completed))
       else:
-         quill.stat(f'{policy}_Task_Reward', ent.history.timeAlive.val)
+         quill.log_player(f'{policy}_Task_Reward', player.history.timeAlive.val)
 
       # Skills
       if config.PROGRESSION_SYSTEM_ENABLED:
          if config.COMBAT_SYSTEM_ENABLED:
-            quill.stat(f'{policy}_Mage_Level',  ent.skills.mage.level.val)
-            quill.stat(f'{policy}_Range_Level', ent.skills.range.level.val)
-            quill.stat(f'{policy}_Melee_Level', ent.skills.melee.level.val)
+            quill.log_player(f'{policy}_Mage_Level',  player.skills.mage.level.val)
+            quill.log_player(f'{policy}_Range_Level', player.skills.range.level.val)
+            quill.log_player(f'{policy}_Melee_Level', player.skills.melee.level.val)
          if config.PROFESSION_SYSTEM_ENABLED:
-            quill.stat(f'{policy}_Fishing',     ent.skills.fishing.level.val)
-            quill.stat(f'{policy}_Herbalism',   ent.skills.herbalism.level.val)
-            quill.stat(f'{policy}_Prospecting', ent.skills.prospecting.level.val)
-            quill.stat(f'{policy}_Carving',     ent.skills.carving.level.val)
-            quill.stat(f'{policy}_Alchemy',     ent.skills.alchemy.level.val)
+            quill.log_player(f'{policy}_Fishing',     player.skills.fishing.level.val)
+            quill.log_player(f'{policy}_Herbalism',   player.skills.herbalism.level.val)
+            quill.log_player(f'{policy}_Prospecting', player.skills.prospecting.level.val)
+            quill.log_player(f'{policy}_Carving',     player.skills.carving.level.val)
+            quill.log_player(f'{policy}_Alchemy',     player.skills.alchemy.level.val)
          if config.EQUIPMENT_SYSTEM_ENABLED:
-            held_item = ent.inventory.equipment.held
+            held_item = player.inventory.equipment.held
             if isinstance(held_item, Item.Weapon):
-               quill.stat(f'{policy}_Weapon_Level', held_item.level.val)
-               quill.stat(f'{policy}_Tool_Level', 0)
+               quill.log_player(f'{policy}_Weapon_Level', held_item.level.val)
+               quill.log_player(f'{policy}_Tool_Level', 0)
             elif isinstance(held_item, Item.Tool):
-               quill.stat(f'{policy}_Weapon_Level', 0)
-               quill.stat(f'{policy}_Tool_Level', held_item.level.val)
+               quill.log_player(f'{policy}_Weapon_Level', 0)
+               quill.log_player(f'{policy}_Tool_Level', held_item.level.val)
             else:
-               quill.stat(f'{policy}_Weapon_Level', 0)
-               quill.stat(f'{policy}_Tool_Level', 0)
-            quill.stat(f'{policy}_Item_Level',   ent.equipment.total(lambda e: e.level))
+               quill.log_player(f'{policy}_Weapon_Level', 0)
+               quill.log_player(f'{policy}_Tool_Level', 0)
+            quill.log_player(f'{policy}_Item_Level',   player.equipment.total(lambda e: e.level))
 
       '''
       key = '{}_Market_{}_{}'
@@ -410,21 +419,21 @@ class Env(ParallelEnv):
 
       # Item usage
       if config.PROFESSION_SYSTEM_ENABLED:
-         quill.stat(f'{policy}_Ration_Consumed',   ent.ration_consumed)
-         quill.stat(f'{policy}_Poultice_Consumed', ent.poultice_consumed)
-         quill.stat(f'{policy}_Ration_Level',      ent.ration_level_consumed)
-         quill.stat(f'{policy}_Poultice_Level',    ent.poultice_level_consumed)
+         quill.log_player(f'{policy}_Ration_Consumed',   player.ration_consumed)
+         quill.log_player(f'{policy}_Poultice_Consumed', player.poultice_consumed)
+         quill.log_player(f'{policy}_Ration_Level',      player.ration_level_consumed)
+         quill.log_player(f'{policy}_Poultice_Level',    player.poultice_level_consumed)
 
 
       # Market
       if config.EXCHANGE_SYSTEM_ENABLED:
          wealth = [p.inventory.gold.quantity.val for _, p in self.realm.players.items()]
-         quill.stat(f'{policy}_Wealth',       ent.inventory.gold.quantity.val)
-         quill.stat(f'{policy}_Market_Sells', ent.sells)
-         quill.stat(f'{policy}_Market_Buys',  ent.buys)
+         quill.log_player(f'{policy}_Wealth',       player.inventory.gold.quantity.val)
+         quill.log_player(f'{policy}_Market_Sells', player.sells)
+         quill.log_player(f'{policy}_Market_Buys',  player.buys)
 
       # Used for SR
-      quill.stat('PolicyID', ent.agent.policyID)
+      quill.log_player('PolicyID', player.agent.policyID)
 
    def terminal(self):
       '''Logs currently alive agents and returns all collected logs
@@ -443,9 +452,9 @@ class Env(ParallelEnv):
       '''
 
       for entID, ent in self.realm.players.entities.items():
-         self.log(ent)
+         self.log_player(ent)
 
-      return self.quill.packet
+      return self.realm.quill.packet
 
    ############################################################################
    ### Override hooks

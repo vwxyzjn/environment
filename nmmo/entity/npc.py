@@ -13,7 +13,7 @@ from nmmo.io import action as Action
 class NPC(entity.Entity):
    def __init__(self, realm, pos, iden, name, color, pop):
       super().__init__(realm, pos, iden, name, color, pop)
-      self.skills = skill.Combat(self)
+      self.skills = skill.Combat(realm, self)
 
    def update(self, realm, actions):
       super().update(realm, actions)

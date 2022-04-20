@@ -118,6 +118,12 @@ class Config(Template):
    RENDER                       = False
    '''Flag used by render mode'''
 
+   LOG_EVENTS                   = True
+   '''Whether to log events (semi-expensive)'''
+
+   LOG_FILE                     = None
+   '''Where to write logs (defaults to console)'''
+
    PLAYERS                      = []
    '''Player classes from which to spawn'''
 

@@ -2,7 +2,7 @@ from pdb import set_trace as T
 import numpy as np
 
 import inspect
-
+import logging
 from nmmo.systems import item as Item
 from nmmo.systems import skill as Skill
 
@@ -31,6 +31,34 @@ class Equipment:
          packet[item_name] = item.packet
 
    @property
+   def item_level(self):
+       return self.total(lambda e: e.level)
+
+   @property
+   def melee_attack(self):
+       return self.total(lambda e: e.melee_attack)
+
+   @property
+   def range_attack(self):
+       return self.total(lambda e: e.range_attack)
+
+   @property
+   def mage_attack(self):
+       return self.total(lambda e: e.mage_attack)
+
+   @property
+   def melee_defense(self):
+       return self.total(lambda e: e.melee_defense)
+
+   @property
+   def range_defense(self):
+       return self.total(lambda e: e.range_defense)
+
+   @property
+   def mage_defense(self):
+       return self.total(lambda e: e.mage_defense)
+
+   @property
    def packet(self):
       packet = {}
 
@@ -40,14 +68,14 @@ class Equipment:
       self.conditional_packet(packet, 'held',       self.held)
       self.conditional_packet(packet, 'ammunition', self.ammunition)
 
-      packet['item_level']    = self.total(lambda e: e.level)
+      packet['item_level']    = self.item_level
 
-      packet['melee_attack']  = self.total(lambda e: e.melee_attack)
-      packet['range_attack']  = self.total(lambda e: e.range_attack)
-      packet['mage_attack']   = self.total(lambda e: e.mage_attack)
-      packet['melee_defense'] = self.total(lambda e: e.melee_defense)
-      packet['range_defense'] = self.total(lambda e: e.range_defense)
-      packet['mage_defense']  = self.total(lambda e: e.mage_defense)
+      packet['melee_attack']  = self.melee_attack
+      packet['range_attack']  = self.range_attack
+      packet['mage_attack']   = self.mage_attack
+      packet['melee_defense'] = self.melee_defense
+      packet['range_defense'] = self.range_defense
+      packet['mage_defense']  = self.mage_defense
 
       return packet
 
@@ -104,6 +132,10 @@ class Inventory:
               stack = self._item_stacks[signature]
               assert item.level.val == stack.level.val, f'{item} stack level mismatch'
               stack.quantity += item.quantity.val
+
+              if self.config.LOG_EVENTS and isinstance(item, Item.Gold) and self.realm.quill.event.log_max(f'Wealth', self.gold.quantity.val):
+                  logging.info(f'EXCHANGE: Total wealth {self.gold.quantity.val} gold')
+              
               return
 
           self._item_stacks[signature] = item

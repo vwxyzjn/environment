@@ -1,4 +1,5 @@
 from pdb import set_trace as T
+import logging
 import abc
 
 import numpy as np
@@ -9,8 +10,10 @@ from nmmo.lib import material
 ### Infrastructure ###
 class SkillGroup:
    def __init__(self, realm):
+      self.config  = realm.config
+      self.realm   = realm
+
       self.expCalc = experience.ExperienceCalculator()
-      self.config  = realm.dataframe.config
       self.skills  = set()
 
    def update(self, realm, entity):
@@ -27,8 +30,10 @@ class SkillGroup:
 class Skill:
    skillItems = abc.ABCMeta
 
-   def __init__(self, entity, skillGroup):
-      self.config  = skillGroup.config
+   def __init__(self, realm, entity, skillGroup):
+      self.config  = realm.config
+      self.realm   = realm
+
       self.expCalc = skillGroup.expCalc
       self.exp     = 0
 
@@ -48,6 +53,9 @@ class Skill:
 
       level = self.expCalc.levelAtExp(self.exp)
       self.level.update(int(level))
+
+      if self.config.LOG_EVENTS and self.realm.quill.event.log_max(f'Level_{self.__class__.__name__}', level):
+         logging.info(f'PROGRESSION: Reached level {level} {self.__class__.__name__}')
 
    def setExpByLevel(self, level):
       self.exp = self.expCalc.expAtLevel(level)
@@ -70,8 +78,16 @@ class HarvestSkill(NonCombatSkill):
 
         #TODO: double-check drop table quantity
         for drop in dropTable.roll(realm, level):
+            assert drop.level.val == level, 'Drop level does not match roll specification'
+
+            if realm.quill.event.log_max(f'Gather_{drop.__class__.__name__}', level):
+                logging.info(f'PROFESSION: Gathered level {level} {drop.__class__.__name__} (level {self.level.val} {self.__class__.__name__})') 
+
             if entity.inventory.space:
                 entity.inventory.receive(drop)
+
+        if not self.config.PROGRESSION_SYSTEM_ENABLED:
+            return
 
         if type(self) != Food and type(self) != Water:
             self.add_xp(self.config.PROGRESSION_HARVEST_XP_SCALE)
@@ -104,11 +120,11 @@ class HarvestSkill(NonCombatSkill):
 
 ### Skill groups ###
 class Basic(SkillGroup):
-    def __init__(self, entity):
-        super().__init__(entity)
+    def __init__(self, realm, entity):
+        super().__init__(realm, entity)
 
-        self.water = Water(entity, self)
-        self.food  = Food(entity, self)
+        self.water = Water(realm, entity, self)
+        self.food  = Food(realm, entity, self)
 
     @property
     def basicLevel(self):
@@ -116,14 +132,14 @@ class Basic(SkillGroup):
                 + self.food.level)
 
 class Harvest(SkillGroup):
-    def __init__(self, entity):
-        super().__init__(entity)
+    def __init__(self, realm, entity):
+        super().__init__(realm, entity)
 
-        self.fishing      = Fishing(entity, self)
-        self.herbalism    = Herbalism(entity, self)
-        self.prospecting  = Prospecting(entity, self)
-        self.carving      = Carving(entity, self)
-        self.alchemy      = Alchemy(entity, self)
+        self.fishing      = Fishing(realm, entity, self)
+        self.herbalism    = Herbalism(realm, entity, self)
+        self.prospecting  = Prospecting(realm, entity, self)
+        self.carving      = Carving(realm, entity, self)
+        self.alchemy      = Alchemy(realm, entity, self)
 
     @property
     def harvestLevel(self):
@@ -134,12 +150,12 @@ class Harvest(SkillGroup):
                    self.alchemy.level) 
 
 class Combat(SkillGroup):
-   def __init__(self, entity):
+   def __init__(self, realm, entity):
       super().__init__(entity)
 
-      self.melee = Melee(entity, self)
-      self.range = Range(entity, self)
-      self.mage  = Mage(entity, self)
+      self.melee = Melee(realm, entity, self)
+      self.range = Range(realm, entity, self)
+      self.mage  = Mage(realm,  entity, self)
 
    def packet(self):
       data          = super().packet() 
@@ -169,19 +185,19 @@ class Skills(Basic, Harvest, Combat):
 
 ### Skills ###
 class Melee(CombatSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Melee(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
 class Range(CombatSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Range(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
 class Mage(CombatSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Mage(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
 Melee.weakness = Mage
 Range.weakness = Melee
@@ -199,9 +215,9 @@ class Lvl:
         self.val = val
 
 class Water(HarvestSkill):
-    def __init__(self, entity, skillGroup):
+    def __init__(self, realm, entity, skillGroup):
         self.level = Lvl(1)
-        super().__init__(entity, skillGroup)
+        super().__init__(realm, entity, skillGroup)
 
     def update(self, realm, entity):
         config = self.config
@@ -221,9 +237,9 @@ class Water(HarvestSkill):
         water.increment(restore)
 
 class Food(HarvestSkill):
-    def __init__(self, entity, skillGroup):
+    def __init__(self, realm, entity, skillGroup):
         self.level = Lvl(1)
-        super().__init__(entity, skillGroup)
+        super().__init__(realm, entity, skillGroup)
 
     def update(self, realm, entity):
         config = self.config
@@ -242,41 +258,41 @@ class Food(HarvestSkill):
         food.increment(restore)
 
 class Fishing(HarvestSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Fishing(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
     def update(self, realm, entity):
         self.harvestAdjacent(realm, entity, material.Fish)
 
 class Herbalism(HarvestSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Herbalism(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
     def update(self, realm, entity):
         self.harvest(realm, entity, material.Herb)
 
 class Prospecting(HarvestSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Prospecting(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
     def update(self, realm, entity):
         self.harvest(realm, entity, material.Ore)
 
 class Carving(HarvestSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Carving(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
     def update(self, realm, entity):
         self.harvest(realm, entity, material.Tree)
 
 class Alchemy(HarvestSkill):
-    def __init__(self, ent, skillGroup):
+    def __init__(self, realm, ent, skillGroup):
         self.level = Serialized.Entity.Alchemy(ent.dataframe, ent.entID)
-        super().__init__(ent, skillGroup)
+        super().__init__(realm, ent, skillGroup)
 
     def update(self, realm, entity):
         self.harvest(realm, entity, material.Crystal)
