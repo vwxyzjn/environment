@@ -7,9 +7,11 @@ from typing import Dict, Callable
 
 import nmmo
 from nmmo import core, infrastructure
+from nmmo.systems.exchange import Exchange
+from nmmo.systems import combat
 from nmmo.entity.npc import NPC
 from nmmo.entity import Player
-from nmmo.lib import colors
+from nmmo.lib import colors, spawn, log
 
 def prioritized(entities: Dict, merged: Dict):
    '''Sort actions into merged according to priority'''
@@ -94,21 +96,30 @@ class NPCManager(EntityGroup):
       super().__init__(config, realm)
       self.realm   = realm
 
+      self.spawn_dangers = []
+
    def reset(self):
       super().reset()
       self.idx     = -1
 
    def spawn(self):
-      if not self.config.game_system_enabled('NPC'):
+      config = self.config
+
+      if not config.NPC_SYSTEM_ENABLED:
          return
 
-      for _ in range(self.config.NPC_SPAWN_ATTEMPTS):
-         if len(self.entities) >= self.config.NMOB:
+      for _ in range(config.NPC_SPAWN_ATTEMPTS):
+         if len(self.entities) >= config.NPC_N:
             break
 
-         center = self.config.TERRAIN_CENTER
-         border = self.config.TERRAIN_BORDER
-         r, c   = np.random.randint(border, center+border, 2).tolist()
+         if self.spawn_dangers:
+            danger = self.spawn_dangers[-1]
+            r, c   = combat.spawn(config, danger)
+         else:
+            center = config.MAP_CENTER
+            border = self.config.MAP_BORDER
+            r, c   = np.random.randint(border, center+border, 2).tolist()
+
          if self.realm.map.tiles[r, c].occupied:
             continue
 
@@ -116,6 +127,13 @@ class NPCManager(EntityGroup):
          if npc: 
             super().spawn(npc)
             self.idx -= 1
+
+         if self.spawn_dangers:
+            self.spawn_dangers.pop()
+
+   def cull(self):
+       for entity in super().cull().values():
+           self.spawn_dangers.append(entity.spawn_danger)
 
    def actions(self, realm):
       actions = {}
@@ -127,8 +145,8 @@ class PlayerManager(EntityGroup):
    def __init__(self, config, realm):
       super().__init__(config, realm)
 
-      self.loader  = config.AGENT_LOADER
       self.palette = colors.Palette()
+      self.loader  = config.PLAYER_LOADER
       self.realm   = realm
 
    def reset(self):
@@ -144,13 +162,14 @@ class PlayerManager(EntityGroup):
       self.idx   += 1
 
    def spawn(self):
-      if self.config.SPAWN == self.config.SPAWN_CONCURRENT:
+      #TODO: remove hard check against fixed function
+      if self.config.PLAYER_SPAWN_FUNCTION == spawn.spawn_concurrent:
          if self.spawned:
             return 
 
          self.spawned = True
          idx = 0
-         for r, c in self.config.SPAWN():
+         for r, c in self.config.PLAYER_SPAWN_FUNCTION(self.config):
             idx += 1
             assert not self.realm.map.tiles[r, c].occupied
             self.spawnIndividual(r, c)
@@ -158,10 +177,10 @@ class PlayerManager(EntityGroup):
           
       #MMO-style spawning
       for _ in range(self.config.PLAYER_SPAWN_ATTEMPTS):
-         if len(self.entities) >= self.config.NENT:
+         if len(self.entities) >= self.config.PLAYER_N:
             break
 
-         r, c   = self.config.SPAWN()
+         r, c   = self.config.PLAYER_SPAWN_FUNCTION(self.config)
          if self.realm.map.tiles[r, c].occupied:
             continue
 
@@ -175,16 +194,25 @@ class Realm:
    def __init__(self, config):
       self.config   = config
 
-      #Generate maps if they do not exist
+      # Generate maps if they do not exist
       config.MAP_GENERATOR(config).generate_all_maps()
 
-      #Load the world file
-      self.dataframe = infrastructure.Dataframe(config)
+      # Load the world file
+      self.dataframe = infrastructure.Dataframe(self)
       self.map       = core.Map(config, self)
 
-      #Entity handlers
+      # Entity handlers
       self.players  = PlayerManager(config, self)
       self.npcs     = NPCManager(config, self)
+
+      # Global item exchange
+      self.exchange = Exchange()
+
+      # Global item registry
+      self.items    = {}
+
+      # Initialize actions
+      nmmo.Action.init(config)
 
    def reset(self, idx):
       '''Reset the environment and load the specified map
@@ -192,6 +220,7 @@ class Realm:
       Args:
          idx: Map index to load
       ''' 
+      self.quill = log.Quill(self.config)
       self.map.reset(self, idx)
       self.players.reset()
       self.npcs.reset()

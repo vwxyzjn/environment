@@ -18,6 +18,10 @@ class NodeType(Enum):
    VARIABLE  = auto() #Variable argument
 
 class Node(metaclass=utils.IterableNameComparable):
+   @classmethod
+   def init(cls, config):
+       pass
+
    @staticproperty
    def edges():
       return []
@@ -39,6 +43,9 @@ class Node(metaclass=utils.IterableNameComparable):
    def N(cls, config):
       return len(cls.edges)
 
+   def deserialize(realm, entity, index):
+      return index
+
    def args(stim, entity, config):
       return []
 
@@ -48,26 +55,22 @@ class Fixed:
 #ActionRoot
 class Action(Node):
    nodeType = NodeType.SELECTION
+   hooked   = False
 
-   @staticproperty
-   def edges():
-      '''List of valid actions'''
-      return [Move, Attack]
+   @classmethod
+   def init(cls, config):
+      # Sets up serialization domain
+      if Action.hooked:
+          return
 
-   @staticproperty
-   def n():
-      return len(Action.arguments)
+      Action.hooked = True
 
-   def args(stim, entity, config):
-      return nmmo.Serialized.edges 
-
-   #Called upon module import (see bottom of file)
-   #Sets up serialization domain
-   def hook():
       idx = 0
       arguments = []
-      for action in Action.edges:
+      for action in Action.edges(config):
+         action.init(config)
          for args in action.edges:
+            args.init(config)
             if not 'edges' in args.__dict__:
                continue
             for arg in args.edges: 
@@ -76,6 +79,27 @@ class Action(Node):
                arg.idx = idx 
                idx += 1
       Action.arguments = arguments
+
+   @classmethod
+   def edges(cls, config):
+      '''List of valid actions'''
+      edges = [Move]
+      if config.COMBAT_SYSTEM_ENABLED:
+          edges.append(Attack)
+      if config.ITEM_SYSTEM_ENABLED:
+          edges.append(Use)
+      if config.EXCHANGE_SYSTEM_ENABLED:
+          edges += [Buy, Sell]
+      if config.COMMUNICATION_SYSTEM_ENABLED:
+          edges.append(Comm)
+      return edges
+
+   @staticproperty
+   def n():
+      return len(Action.arguments)
+
+   def args(stim, entity, config):
+      return nmmo.Serialized.edges 
 
 class Move(Node):
    priority = 1
@@ -170,7 +194,7 @@ class Attack(Node):
       return abs(r - rCent) + abs(c - cCent)
 
    def call(env, entity, style, targ):
-      if entity.isPlayer and not env.config.game_system_enabled('Combat'):
+      if entity.isPlayer and not env.config.COMBAT_SYSTEM_ENABLED:
          return 
 
       #Check if self targeted
@@ -199,7 +223,7 @@ class Attack(Node):
       targ.attackerID.update(entity.entID)
 
       from nmmo.systems import combat
-      dmg = combat.attack(entity, targ, style.skill)
+      dmg = combat.attack(env, entity, targ, style.skill)
 
       if style.freeze and dmg > 0:
          targ.status.freeze.update(env.config.COMBAT_FREEZE_TIME)
@@ -218,12 +242,14 @@ class Style(Node):
 
 class Target(Node):
    argType = None
-   #argType = Player 
 
    @classmethod
    def N(cls, config):
       #return config.WINDOW ** 2
-      return config.N_AGENT_OBS
+      return config.PLAYER_N_OBS
+
+   def deserialize(realm, entity, index):
+      return realm.entity(index)
 
    def args(stim, entity, config):
       #Should pass max range?
@@ -231,7 +257,6 @@ class Target(Node):
 
 class Melee(Node):
    nodeType = NodeType.ACTION
-   index = 0
    freeze=False
 
    def attackRange(config):
@@ -242,7 +267,6 @@ class Melee(Node):
 
 class Range(Node):
    nodeType = NodeType.ACTION
-   index = 1
    freeze=False
 
    def attackRange(config):
@@ -253,8 +277,7 @@ class Range(Node):
 
 class Mage(Node):
    nodeType = NodeType.ACTION
-   index = 2
-   freeze=True
+   freeze=False
 
    def attackRange(config):
       return config.COMBAT_MAGE_REACH
@@ -262,16 +285,115 @@ class Mage(Node):
    def skill(entity):
       return entity.skills.mage
 
-#TODO: Add communication
-class Message:
-   pass
+class Use(Node):
+    priority = 2
 
-#TODO: Add trade
-class Exchange:
-   pass
+    @staticproperty
+    def edges():
+        return [Item]
+
+    def call(env, entity, item):
+        if item not in entity.inventory:
+            return
+
+        return item.use(entity)
+
+class Item(Node):
+    argType  = 'Entity'
+
+    @classmethod
+    def N(cls, config):
+        return config.ITEM_N_OBS
+
+    def args(stim, entity, config):
+        return stim.exchange.items()
+
+    def deserialize(realm, entity, index):
+        return realm.items[index]
+
+class Buy(Node):
+    priority = 4
+    argType  = Fixed
+
+    @staticproperty
+    def edges():
+        return [Item]
+
+    def call(env, entity, item):
+        #Do not process exchange actions on death tick
+        if not entity.alive:
+            return
+
+        if not entity.inventory.space:
+            return
+
+        return env.exchange.buy(env, entity, item)
+
+class Sell(Node):
+    priority = 3
+    argType  = Fixed
+
+    @staticproperty
+    def edges():
+        return [Item, Price]
+
+    def call(env, entity, item, price):
+        #Do not process exchange actions on death tick
+        if not entity.alive:
+            return
+
+        # TODO: Find a better way to check this
+        # Should only occur when item is used on same tick
+        # Otherwise should not be possible
+        if item not in entity.inventory:
+            return
+
+        return env.exchange.sell(env, entity, item, price.val)
+
+def init_discrete(values):
+    classes = []
+    for i in values:
+        name = f'Discrete_{i}'
+        cls  = type(name, (object,), {'val': i})
+        classes.append(cls)
+    return classes
+
+class Price(Node):
+    argType  = Fixed
+
+    @classmethod
+    def init(cls, config):
+        Price.classes = init_discrete(range(1, 101))
+
+    @staticproperty
+    def edges():
+        return Price.classes
+
+    def args(stim, entity, config):
+        return Price.edges
+
+class Token(Node):
+    @classmethod
+    def init(cls, config):
+        Comm.classes = init_discrete(range(config.COMMUNICATION_NUM_TOKENS))
+
+    @staticproperty
+    def edges():
+        return Comm.classes
+
+    def args(stim, entity, config):
+        return Comm.edges
+
+class Comm(Node):
+    priority = 0
+
+    @staticproperty
+    def edges():
+        return [Token]
+
+    def call(env, entity, token):
+        entity.base.comm.update(token)
 
 #TODO: Solve AGI
 class BecomeSkynet:
    pass
-
-Action.hook()
