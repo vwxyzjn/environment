@@ -3,8 +3,6 @@ import numpy as np
 
 import inspect
 import logging
-from multiset import Multiset
-
 from nmmo.systems import item as Item
 from nmmo.systems import skill as Skill
 
