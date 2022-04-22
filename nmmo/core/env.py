@@ -220,7 +220,7 @@ class Env(ParallelEnv):
 
       if self.config.EMULATE_FLAT_ATN:
          lens = []
-         for atn in nmmo.Action.edges:
+         for atn in nmmo.Action.edges(self.config):
              for arg in atn.edges:
                  lens.append(arg.N(self.config))
          return gym.spaces.MultiDiscrete(lens)
@@ -414,7 +414,7 @@ class Env(ParallelEnv):
          if self.config.EMULATE_FLAT_ATN:
             ent_action = {}
             idx = 0
-            for atn in nmmo.Action.edges:
+            for atn in nmmo.Action.edges(self.config):
                 ent_action[atn] = {}
                 for arg in atn.edges:
                     ent_action[atn][arg] = actions[entID][idx]
@@ -436,11 +436,20 @@ class Env(ParallelEnv):
                       continue
                   targ = ent.targets[val]
                   self.actions[entID][atn][arg] = self.realm.entity(targ)
-               elif arg == nmmo.action.Item:
+               elif atn in (nmmo.action.Sell, nmmo.action.Use) and arg == nmmo.action.Item:
                   if val >= len(ent.inventory.dataframeKeys):
                       drop = True
                       continue
                   itm = [e for e in ent.inventory._item_references][val]
+                  if type(itm) == Item.Gold:
+                      drop = True
+                      continue
+                  self.actions[entID][atn][arg] = itm
+               elif atn == nmmo.action.Buy and arg == nmmo.action.Item:
+                  if val >= len(self.realm.exchange.dataframeKeys):
+                      drop = True
+                      continue
+                  itm = self.realm.exchange.dataframeVals[val]
                   self.actions[entID][atn][arg] = itm
                elif __debug__: #Fix -inf in classifier and assert err on bad atns
                   assert False, f'{arg} invalid'

@@ -50,7 +50,9 @@ class SB3Env(Env):
 
         if self.realm.tick >= self.config.HORIZON or len(self.realm.players) == 0:
             # Cheat logs into infos
-            infos[1]['logs'] = self.terminal()['Stats']
+            stats = self.terminal()
+            stats = {**stats['Env'], **stats['Player'], **stats['Event']}
+            infos[1]['logs'] = stats
 
         return obs, rewards, dones, infos 
 

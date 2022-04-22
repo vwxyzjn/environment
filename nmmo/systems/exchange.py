@@ -115,6 +115,15 @@ class Exchange:
 
       return keys
 
+   @property
+   def dataframeVals(self):
+      vals = []
+      for listings in self.item_listings.values():
+         if listings.placeholder:
+            vals.append(listings.placeholder)
+
+      return vals
+
    def step(self):
       for item, listings in self.item_listings.items():
          listings.step()

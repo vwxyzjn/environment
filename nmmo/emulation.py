@@ -53,9 +53,9 @@ def const_horizon(dones):
 
 def pack_atn_space(config):
    actions = defaultdict(dict)                                             
-   for atn in sorted(nmmo.Action.edges):                                   
-      for arg in sorted(atn.edges):                                        
-         actions[atn][arg] = arg.N(config)                            
+   for atn in sorted(nmmo.Action.edges(config)):
+      for arg in sorted(atn.edges):
+         actions[atn][arg] = arg.N(config)
                                                                            
    n = 0                                                                   
    flat_actions = {}                                                  

@@ -373,6 +373,8 @@ class Price(Node):
         return Price.edges
 
 class Token(Node):
+    argType  = Fixed
+
     @classmethod
     def init(cls, config):
         Comm.classes = init_discrete(range(config.COMMUNICATION_NUM_TOKENS))
@@ -385,6 +387,7 @@ class Token(Node):
         return Comm.edges
 
 class Comm(Node):
+    argType  = Fixed
     priority = 0
 
     @staticproperty
@@ -392,7 +395,7 @@ class Comm(Node):
         return [Token]
 
     def call(env, entity, token):
-        entity.base.comm.update(token)
+        entity.base.comm.update(token.val)
 
 #TODO: Solve AGI
 class BecomeSkynet:
