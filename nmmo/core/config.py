@@ -202,8 +202,8 @@ class Config(Template):
    @property
    def PLAYER_TEAM_SIZE(self):
       if __debug__:
-         assert not self.NENT % self.NPOP
-      return self.NENT // self.NPOP
+         assert not self.PLAYER_N % self.NPOP
+      return self.PLAYER_N // self.NPOP
 
 
    ############################################################################
@@ -211,20 +211,6 @@ class Config(Template):
    MAP_N                        = 1
    '''Number of maps to generate'''
 
-   def SPAWN_CONCURRENT(self, shuffle=True):
-      left   = self.TERRAIN_BORDER
-      right  = self.TERRAIN_CENTER + self.TERRAIN_BORDER
-      rrange = np.arange(left+2, right, 4).tolist()
-
-      ret = s1 + s2 + s3 + s4
-      if shuffle:
-        assert not len(ret) % self.NPOP
-        ret = np.array_split(ret, self.NPOP)
-        np.random.shuffle(ret)
-        ret = np.concatenate(ret, axis=0).tolist()
-      n = int(self.NENT * len(self.AGENTS))
-      return ret[:n]
- 
    MAP_N_TILE                   = len(material.All.materials)
    '''Number of distinct terrain tile types'''
 
