@@ -610,6 +610,8 @@ class Env(ParallelEnv):
 
       # Used for SR
       quill.log_player('PolicyID', player.agent.policyID)
+      if player.diary:
+         quill.log_player(f'Task_Reward', player.diary.cumulative_reward)
 
    def terminal(self):
       '''Logs currently alive agents and returns all collected logs
