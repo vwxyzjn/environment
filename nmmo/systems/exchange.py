@@ -156,9 +156,9 @@ class Exchange:
          buyer.inventory.receive(listings.placeholder)
 
          if config.LOG_EVENTS:
-            if realm.quill.event.log_max(f'Buy_{item.__name__}', level):
+            if realm.quill.event.log_max(f'Buy_{item.__name__}', level) and config.LOG_VERBOSE:
                logging.info(f'EXCHANGE: Bought level {level} {item.__name__} for {price} gold')
-            if realm.quill.event.log_max(f'Transaction_Amount', price):
+            if realm.quill.event.log_max(f'Transaction_Amount', price) and config.LOG_VERBOSE:
                logging.info(f'EXCHANGE: Transaction of {price} gold (level {level} {item.__name__})')
 
          #Update placeholder
@@ -182,7 +182,7 @@ class Exchange:
       seller.inventory.remove(item, quantity=1)
       item = type(item)
 
-      if config.LOG_EVENTS and realm.quill.event.log_max(f'Sell_{item.__name__}', level):
+      if config.LOG_EVENTS and realm.quill.event.log_max(f'Sell_{item.__name__}', level) and config.LOG_VERBOSE:
          logging.info(f'EXCHANGE: Offered level {level} {item.__name__} for {price} gold')
 
       listings_key  = (item, level)

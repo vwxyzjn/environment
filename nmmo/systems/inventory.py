@@ -126,6 +126,10 @@ class Inventory:
       assert self.space, f'Out of space for {item}'
       assert item.quantity.val, f'Received empty item {item}'
 
+      config = self.config
+      if config.LOG_EVENTS and self.realm.quill.event.log_max(f'Receive_{item.__class__.__name__}', item.level) and config.LOG_VERBOSE:
+          logging.info(f'INVENTORY: Received level {item.level} {item.__name__}')
+
       if isinstance(item, Item.Stack):
           signature = item.signature
           if signature in self._item_stacks:
@@ -133,7 +137,7 @@ class Inventory:
               assert item.level.val == stack.level.val, f'{item} stack level mismatch'
               stack.quantity += item.quantity.val
 
-              if self.config.LOG_EVENTS and isinstance(item, Item.Gold) and self.realm.quill.event.log_max(f'Wealth', self.gold.quantity.val):
+              if config.LOG_EVENTS and isinstance(item, Item.Gold) and self.realm.quill.event.log_max(f'Wealth', self.gold.quantity.val) and config.LOG_VERBOSE:
                   logging.info(f'EXCHANGE: Total wealth {self.gold.quantity.val} gold')
               
               return

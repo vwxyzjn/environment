@@ -112,6 +112,12 @@ class Config(Template):
       if __debug__:
          validate(self)
 
+      deprecated_attrs = [
+            'NENT', 'NPOP', 'AGENTS', 'NMAPS', 'FORCE_MAP_GENERATION']
+
+      for attr in deprecated_attrs:
+          assert not hasattr(self, attr), f'{attr} has been deprecated or renamed'
+
 
    ############################################################################
    ### Meta-Parameters
@@ -144,6 +150,9 @@ class Config(Template):
 
    ############################################################################
    ### Population Parameters                                                   
+   LOG_VERBOSE                  = False
+   '''Whether to log server messages or just stats'''
+
    LOG_EVENTS                   = True
    '''Whether to log events (semi-expensive)'''
 

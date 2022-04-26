@@ -128,28 +128,29 @@ class Equipment(Item):
          self.equipped.update(1)
          equip = self.equip(entity)
 
-         if not self.config.LOG_EVENTS or not entity.isPlayer:
+         config = self.config
+         if not config.LOG_EVENTS or not entity.isPlayer:
              return equip
 
          realm     = self.realm
          equipment = entity.equipment
          item_name = self.__class__.__name__
 
-         if realm.quill.event.log_max(f'{item_name}_level', self.level.val):
+         if realm.quill.event.log_max(f'{item_name}_level', self.level.val) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Equipped level {self.level.val} {item_name}')
-         if realm.quill.event.log_max(f'Item_Level', equipment.item_level):
+         if realm.quill.event.log_max(f'Item_Level', equipment.item_level) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Item level {equipment.item_level}')
-         if realm.quill.event.log_max(f'Mage_Attack', equipment.mage_attack):
+         if realm.quill.event.log_max(f'Mage_Attack', equipment.mage_attack) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Mage attack {equipment.mage_attack}')
-         if realm.quill.event.log_max(f'Mage_Defense', equipment.mage_defense):
+         if realm.quill.event.log_max(f'Mage_Defense', equipment.mage_defense) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Mage defense {equipment.mage_defense}')
-         if realm.quill.event.log_max(f'Range_Attack', equipment.range_attack):
+         if realm.quill.event.log_max(f'Range_Attack', equipment.range_attack) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Range attack {equipment.range_attack}')
-         if realm.quill.event.log_max(f'Range_Defense', equipment.range_defense):
+         if realm.quill.event.log_max(f'Range_Defense', equipment.range_defense) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Range defense {equipment.range_defense}')
-         if realm.quill.event.log_max(f'Melee_Attack', equipment.melee_attack):
+         if realm.quill.event.log_max(f'Melee_Attack', equipment.melee_attack) and config.LOG_VERBOSE:
             logging.info(f'EQUIPMENT: Melee attack {equipment.melee_attack}')
-         if realm.quill.event.log_max(f'Melee_Defense', equipment.melee_defense):
+         if realm.quill.event.log_max(f'Melee_Defense', equipment.melee_defense) and config.LOG_VERBOSE:
                 logging.info(f'EQUIPMENT: Melee defense {equipment.melee_defense}')
 
       return equip
@@ -382,7 +383,7 @@ class Ration(Consumable):
       if entity.level < self.level.val:
           return False
 
-      if self.realm.quill.event.log_max(f'Consumed_Ration', self.level.val):
+      if self.config.LOG_EVENTS and self.realm.quill.event.log_max(f'Consumed_Ration', self.level.val) and self.config.LOG_VERBOSE:
          logging.info(f'PROFESSION: Consumed level {self.level.val} ration')
  
       entity.resources.food.increment(self.resource_restore.val)
@@ -404,7 +405,7 @@ class Poultice(Consumable):
       if entity.level < self.level.val:
           return False
 
-      if self.realm.quill.event.log_max(f'Consumed_Poultice', self.level.val):
+      if self.config.LOG_EVENTS and self.realm.quill.event.log_max(f'Consumed_Poultice', self.level.val) and self.config.LOG_VERBOSE:
          logging.info(f'PROFESSION: Consumed level {self.level.val} poultice')
  
       entity.resources.health.increment(self.health_restore.val)
