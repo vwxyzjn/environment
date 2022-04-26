@@ -363,7 +363,7 @@ class Price(Node):
 
     @classmethod
     def init(cls, config):
-        Price.classes = init_discrete(range(1, 101))
+        Price.classes = init_discrete([1, 3, 5, 10, 20])
 
     @staticproperty
     def edges():

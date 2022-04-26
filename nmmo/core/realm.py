@@ -205,12 +205,6 @@ class Realm:
       self.players  = PlayerManager(config, self)
       self.npcs     = NPCManager(config, self)
 
-      # Global item exchange
-      self.exchange = Exchange()
-
-      # Global item registry
-      self.items    = {}
-
       # Initialize actions
       nmmo.Action.init(config)
 
@@ -225,7 +219,13 @@ class Realm:
       self.players.reset()
       self.npcs.reset()
       self.tick = 0
- 
+
+      # Global item exchange
+      self.exchange = Exchange()
+
+      # Global item registry
+      self.items    = {}
+
    def packet(self):
       '''Client packet'''
       return {'environment': self.map.repr,

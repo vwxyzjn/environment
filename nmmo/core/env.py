@@ -128,7 +128,7 @@ class Env(ParallelEnv):
          self.replay = Replay(config)
 
       if config.EMULATE_CONST_NENT:
-         self.possible_agents = [i for i in range(1, config.NENT + 1)]
+         self.possible_agents = [i for i in range(1, config.PLAYER_N + 1)]
 
       # Flat index actions
       if config.EMULATE_FLAT_ATN:
