@@ -96,7 +96,7 @@ def cleanrl_vec_envs(config_cls, eval_config_cls=None, verbose=True):
             env.black_death = True #We provide our own black_death emulation
 
             env = ss.concat_vec_envs_v1(env,
-                    config.NUM_ENVS // config.NENT,
+                    config.NUM_ENVS // config.PLAYER_N,
                     config.NUM_CPUS,
                     base_class='gym')
 
@@ -125,12 +125,12 @@ def cleanrl_vec_envs(config_cls, eval_config_cls=None, verbose=True):
 
         eval_config = eval_config_cls()
         num_cpus    = config.NUM_CPUS + eval_config.NUM_CPUS
-        num_envs    = config.NUM_ENVS // config.NENT + eval_config.NUM_ENVS // eval_config.NENT
+        num_envs    = config.NUM_ENVS // config.PLAYER_N + eval_config.NUM_ENVS // eval_config.PLAYER_N
     else:
         envs     = [make_env_fn(config_cls)]
 
         num_cpus = config.NUM_CPUS
-        num_envs = config.NUM_ENVS // config.NENT
+        num_envs = config.NUM_ENVS // config.PLAYER_N
 
     envs = ss.vector.MakeCPUAsyncConstructor(num_cpus)(envs,
             obs_space=dummy_env.observation_space(1),
