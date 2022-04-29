@@ -39,6 +39,18 @@ class Template(metaclass=utils.StaticIterable):
       for k, v in self.data.items():
          print('   {:{}s}: {}'.format(k, keyLen, v))
 
+   def items(self):
+       return self.data.items()
+
+   def __iter__(self):
+       for k in self.data:
+           yield k
+
+   def keys(self):
+       return self.data.keys()
+
+   def values(self):
+       return self.data.values()
 
 def validate(config):
     err = 'config.Config is a base class. Use config.{Small, Medium Large}'''
@@ -58,7 +70,6 @@ def validate(config):
         assert not config.EQUIPMENT_SYSTEM_ENABLED, err.format('Equipment')
         assert not config.PROFESSION_SYSTEM_ENABLED, err.format('Profession')
         assert not config.EXCHANGE_SYSTEM_ENABLED, err.format('Exchange')
-
 
 class Config(Template):
    '''An environment configuration object
