@@ -445,6 +445,7 @@ class Env(ParallelEnv):
          else:
             obs[entID]     = ob
             rewards[entID], infos[entID] = self.reward(ent)
+            infos[entID]['live']  = True
             dones[entID]   = False
 
       for entID, ent in self.dead.items():
@@ -459,6 +460,8 @@ class Env(ParallelEnv):
          if not self.config.EMULATE_CONST_HORIZON:
             dones[ent.entID] = True
 
+         # Think this needs to be included with dones ...
+         infos[entID]['live']  = True
          obs[ent.entID]     = self.dummy_ob
 
       if self.config.EMULATE_CONST_NENT:
