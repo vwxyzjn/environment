@@ -42,7 +42,7 @@ def pad_const_nent(config, dummy_ob, obs, rewards, dones, infos):
         if i not in obs:                                                  
             obs[i]     = dummy_ob                                         
             rewards[i] = 0                                                 
-            infos[i]   = {'live': False}
+            infos[i]   = {'done': True}
             dones[i]   = False
 
 def const_horizon(dones):

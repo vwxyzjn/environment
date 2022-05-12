@@ -181,11 +181,13 @@ class Env(ParallelEnv):
 
       observation   = gym.spaces.Dict(observation)
 
+      '''
       if not self.dummy_ob:
          self.dummy_ob = observation.sample()
          for ent_key, ent_val in self.dummy_ob.items():
              for attr_key, attr_val in ent_val.items():
                  self.dummy_ob[ent_key][attr_key] *= 0                
+      '''
 
 
       if not self.config.EMULATE_FLAT_OBS:
@@ -443,10 +445,13 @@ class Env(ParallelEnv):
                atn[nmmo.action.Target] = self.realm.entity(targ)
             self.actions[entID] = atns
          else:
+            if not self.dummy_ob:
+                self.dummy_ob = ob
+
             obs[entID]     = ob
             rewards[entID], infos[entID] = self.reward(ent)
-            infos[entID]['live']  = True
-            dones[entID]   = False
+            infos[entID]['done']  = False
+            dones[entID]          = False
 
       for entID, ent in self.dead.items():
          self.log(ent)
@@ -461,7 +466,7 @@ class Env(ParallelEnv):
             dones[ent.entID] = True
 
          # Think this needs to be included with dones ...
-         infos[entID]['live']  = True
+         infos[ent.entID]['done']  = True
          obs[ent.entID]     = self.dummy_ob
 
       if self.config.EMULATE_CONST_NENT:
