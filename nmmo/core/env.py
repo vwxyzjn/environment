@@ -404,6 +404,9 @@ class Env(ParallelEnv):
 
          ent = self.realm.players[entID]
 
+         if ent.agent.scripted:
+            continue
+ 
          if not ent.alive:
             continue
 
