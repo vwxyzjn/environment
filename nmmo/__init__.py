@@ -15,7 +15,6 @@ motd = r'''      ___           ___           ___           ___
 
 from . import scripting
 from .lib import material, spawn
-from .lib.rating import OpenSkillRating
 from .overlay import Overlay, OverlayRegistry
 from .io import action
 from .io.stimulus import Serialized
@@ -30,3 +29,10 @@ from .core.terrain import MapGenerator, Terrain
 __all__ = ['Env', 'config', 'scripting', 'emulation', 'integrations', 'agent', 'Agent', 'MapGenerator', 'Terrain',
         'Serialized', 'action', 'Action', 'scripting', 'material', 'spawn',
         'Task', 'Overlay', 'OverlayRegistry', 'Replay']
+
+try:
+    import openskill
+    from .lib.rating import OpenSkillRating
+    __all__.append('OpenSkillRating')
+except:
+    print('Warning: OpenSkill not installed. Ignore if you do not need this feature')
