@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "nmmo"
+version = "0.1.0"
+description = ""
+authors = ["Costa Huang <costa.huang@outlook.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.11"
+pytest-benchmark = "3.4.1"
+openskill = "0.2.0-alpha.0"
+fire = "0.4.0"
+setproctitle = "1.1.10"
+service-identity = "21.1.0"
+autobahn = "19.3.3"
+Twisted = "19.2.0"
+vec-noise = "1.1.4"
+imageio = "2.8.0"
+tqdm = "4.61.1"
+lz4 = "4.0.0"
+PettingZoo = "^1.18.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
