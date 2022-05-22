@@ -275,7 +275,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "pettingzoo"
-version = "1.18.1"
+version = "1.15.0"
 description = "Gym for multi-agent reinforcement learning"
 category = "main"
 optional = false
@@ -286,15 +286,15 @@ gym = ">=0.21.0"
 numpy = ">=1.18.0"
 
 [package.extras]
-all = ["multi-agent-ale-py (==0.1.11)", "pygame (==2.1.0)", "chess (==1.7.0)", "rlcard (==1.0.4)", "hanabi-learning-environment (==0.0.1)", "pymunk (==6.2.0)", "magent (==0.2.2)", "pyglet (>=1.4.0)", "box2d-py (==2.3.5)", "scipy (>=1.4.1)", "pillow (>=8.0.1)"]
-atari = ["multi-agent-ale-py (==0.1.11)", "pygame (==2.1.0)"]
+all = ["multi_agent_ale_py (==0.1.11)", "pygame (==2.1.0)", "chess (==1.7.0)", "rlcard (==1.0.4)", "pygame (==2.1.0)", "hanabi_learning_environment (==0.0.1)", "pygame (==2.1.0)", "pymunk (==6.2.0)", "magent (==0.1.14)", "pyglet (>=1.4.0)", "pygame (==2.1.0)", "box2d-py (==2.3.5)", "scipy (>=1.4.1)", "pillow (>=8.0.1)"]
+atari = ["multi_agent_ale_py (==0.1.11)", "pygame (==2.1.0)"]
 butterfly = ["pygame (==2.1.0)", "pymunk (==6.2.0)"]
-classic = ["chess (==1.7.0)", "rlcard (==1.0.4)", "pygame (==2.1.0)", "hanabi-learning-environment (==0.0.1)"]
-magent = ["magent (==0.2.2)"]
+classic = ["chess (==1.7.0)", "rlcard (==1.0.4)", "pygame (==2.1.0)", "hanabi_learning_environment (==0.0.1)"]
+magent = ["magent (==0.1.14)"]
 mpe = ["pyglet (>=1.4.0)"]
 other = ["pillow (>=8.0.1)"]
 sisl = ["pygame (==2.1.0)", "box2d-py (==2.3.5)", "scipy (>=1.4.1)"]
-tests = ["pynput", "pytest", "codespell", "flake8", "isort"]
+tests = ["pynput"]
 
 [[package]]
 name = "pillow"
@@ -584,7 +584,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "fc72e22890b7fbe782acde36ac6aa49bc4b1ecddb3b090463ccda18df80a7fc3"
+content-hash = "e66222f5400e506518d66e642a8d6d4925530f0068ddf4d96807347236da0118"
 
 [metadata.files]
 atomicwrites = [
@@ -781,8 +781,7 @@ packaging = [
     {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
 pettingzoo = [
-    {file = "PettingZoo-1.18.1-py3-none-any.whl", hash = "sha256:25ae45fcfa2c623800e1f81b98ae50f5f5a1af6caabc5946764248de71a0371d"},
-    {file = "PettingZoo-1.18.1.tar.gz", hash = "sha256:7e6a3231dc3fc3801af83fe880f199f570d46a9acdcb990f2a223f121b6e5038"},
+    {file = "PettingZoo-1.15.0.tar.gz", hash = "sha256:cded4074aa94bad9733d5c55c73ed27e50c6bfd525e07f0e6f7c4d0a379bb249"},
 ]
 pillow = [
     {file = "Pillow-9.1.1-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:42dfefbef90eb67c10c45a73a9bc1599d4dac920f7dfcbf4ec6b80cb620757fe"},

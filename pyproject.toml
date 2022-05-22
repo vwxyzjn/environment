@@ -17,7 +17,7 @@ vec-noise = "1.1.4"
 imageio = "2.8.0"
 tqdm = "4.61.1"
 lz4 = "4.0.0"
-PettingZoo = "^1.18.1"
+PettingZoo = "1.15.0"
 
 [tool.poetry.dev-dependencies]
 
